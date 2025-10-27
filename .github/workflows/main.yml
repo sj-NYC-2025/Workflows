@@ -1,0 +1,38 @@
+
+name: Daily Trivia Generator
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Runs daily at 8 AM UTC
+  workflow_dispatch:
+
+jobs:
+  generate-trivia:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: List files for debugging
+      run: ls -R ${{ github.workspace }}
+
+    - name: Run trivia generator
+      run: |
+        cd ${{ github.workspace }}
+        python generate_trivia.py
+
+    - name: Commit generated JSON
+      run: |
+        git config --global user.name 'github-actions'
+        git config --global user.email 'github-actions@github.com'
+        git add daily_trivia_questions.json || echo "No changes to commit"
+        git commit -m 'Daily trivia questions update' || echo "Nothing to commit"
+        git push
